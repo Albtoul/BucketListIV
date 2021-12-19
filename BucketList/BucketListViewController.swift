@@ -19,11 +19,32 @@ class BucketListViewController: UITableViewController, AddButtonsDelegate{
             list[ip.row] = text
             
         }else{
-            list.append(text)
+            addToAPI(text)
         }
         
         dismiss(animated: true, completion: nil)
         tableView.reloadData()
+    }
+    
+    func addToAPI(_ text:String) {
+        list = []
+        TaskModel.addTaskWithObjective(objective: text, completionHandler: {
+            data, response, error in
+            do {
+                if let tasks = try JSONSerialization.jsonObject(with: data!, options: JSONSerialization.ReadingOptions.mutableContainers) as? NSArray {
+                    for task in tasks {
+                        if let task = task as? NSDictionary{
+                            self.list.append(task["objective"] as! String)
+                        }
+                    }
+                }
+                DispatchQueue.main.async {
+                    self.tableView.reloadData()
+                }
+            } catch {
+                print("Something went wrong")
+            }
+        })
     }
     
     var list : [String] = []
