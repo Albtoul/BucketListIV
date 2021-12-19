@@ -8,6 +8,7 @@
 import UIKit
 
 class BucketListViewController: UITableViewController, AddButtonsDelegate{
+    var list : [String] = []
     
     func cancelButtonPressed(by controller: AddItemViewController) {
         dismiss(animated: true, completion: nil)
@@ -16,14 +17,34 @@ class BucketListViewController: UITableViewController, AddButtonsDelegate{
     func saveButtonPressed(by controller:AddItemViewController, with text:String, indexPath:IndexPath?){
         
         if let ip = indexPath {
-            list[ip.row] = text
+            updateAPI(ip.row,text)
             
         }else{
             addToAPI(text)
         }
         
         dismiss(animated: true, completion: nil)
-        tableView.reloadData()
+    }
+    
+    func updateAPI(_ index:Int,_ text:String){
+        list = []
+        TaskModel.updateTask(index: index, objective: text, completionHandler: {
+            data, response, error in
+            do {
+                if let tasks = try JSONSerialization.jsonObject(with: data!, options: JSONSerialization.ReadingOptions.mutableContainers) as? NSArray {
+                    for task in tasks {
+                        if let task = task as? NSDictionary{
+                            self.list.append(task["objective"] as! String)
+                        }
+                    }
+                }
+                DispatchQueue.main.async {
+                    self.tableView.reloadData()
+                }
+            } catch {
+                print("Something went wrong")
+            }
+        })
     }
     
     func addToAPI(_ text:String) {
@@ -47,7 +68,7 @@ class BucketListViewController: UITableViewController, AddButtonsDelegate{
         })
     }
     
-    var list : [String] = []
+    
     
     override func viewDidLoad() {
         
@@ -107,8 +128,24 @@ class BucketListViewController: UITableViewController, AddButtonsDelegate{
     }
     
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
-        list.remove(at: indexPath.row)
-        tableView.reloadData()
+        list = []
+        TaskModel.deleteTask(index: indexPath.row, completionHandler: {
+            data, response, error in
+            do {
+                if let tasks = try JSONSerialization.jsonObject(with: data!, options: JSONSerialization.ReadingOptions.mutableContainers) as? NSArray {
+                    for task in tasks {
+                        if let task = task as? NSDictionary{
+                            self.list.append(task["objective"] as! String)
+                        }
+                    }
+                }
+                DispatchQueue.main.async {
+                    self.tableView.reloadData()
+                }
+            } catch {
+                print("Something went wrong")
+            }
+        })
     }
     
 }
