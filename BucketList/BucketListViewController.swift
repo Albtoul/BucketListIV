@@ -27,11 +27,31 @@ class BucketListViewController: UITableViewController, AddButtonsDelegate{
     }
     
     var list : [String] = []
-
+    
     override func viewDidLoad() {
+        
+        // Using The method in TaskModel to make request to localhost server to get tasks and add them in list array to display them in table
+        TaskModel.getAllTasks() {
+            data, response, error in
+            do {
+                if let tasks = try JSONSerialization.jsonObject(with: data!, options: JSONSerialization.ReadingOptions.mutableContainers) as? NSArray {
+                    for task in tasks {
+                        if let task = task as? NSDictionary{
+                            self.list.append(task["objective"] as! String)
+                        }
+                    }
+                }
+                DispatchQueue.main.async {
+                    self.tableView.reloadData()
+                }
+            } catch {
+                print("Something went wrong")
+            }
+        }
         super.viewDidLoad()
-        // Do any additional setup after loading the view.
     }
+    
+    
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         list.count
